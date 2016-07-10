@@ -1,0 +1,20 @@
+{
+  "name": "hlayout",
+  "version": "1.0.0",
+  "description": "Hierarchical graph layout algorithm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "hierarchical",
+    "graph",
+    "layout"
+  ],
+  "author": "Andrei Kashcha",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anvaka/hlayout"
+  }
+}
