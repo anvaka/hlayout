@@ -4,7 +4,8 @@
   "description": "Hierarchical graph layout algorithm",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tap test/*.js",
+    "start": "browserify ./demo/index.js > ./demo/bundle.js"
   },
   "keywords": [
     "hierarchical",
@@ -16,5 +17,18 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/anvaka/hlayout"
+  },
+  "devDependencies": {
+    "miserables": "^1.0.0",
+    "panzoom": "^1.2.1",
+    "simplesvg": "^0.1.1",
+    "tap": "^6.1.1"
+  },
+  "dependencies": {
+    "circle-enclose": "^1.0.0",
+    "d3-force": "^1.0.0",
+    "ngraph.coarsen": "^1.0.2",
+    "ngraph.graph": "0.0.12",
+    "ngraph.louvain": "^1.0.1"
   }
 }
