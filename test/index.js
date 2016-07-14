@@ -12,7 +12,7 @@ test('it can run the layout', function(t) {
 
     t.ok(typeof position.x === 'number' &&
          typeof position.y === 'number',
-         'Position is defined for ', node.id);
+         'Position is defined for ' + node.id);
   });
 
   t.end();
