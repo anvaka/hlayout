@@ -27,7 +27,7 @@
   "dependencies": {
     "circle-enclose": "^1.0.0",
     "d3-force": "^1.0.0",
-    "ngraph.coarsen": "^1.0.2",
+    "ngraph.coarsen": "^1.2.0",
     "ngraph.graph": "0.0.12",
     "ngraph.louvain": "^1.0.1"
   }
