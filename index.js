@@ -1,12 +1,13 @@
 module.exports = createLayout;
 
 var internalLayout = require('./lib/internalLayout.js');
+var layoutIsolateNodes = require('./lib/layoutIsolateNodes.js');
 var log = require('./lib/log.js');
 var detectClusters = require('ngraph.louvain');
 var coarsen = require('ngraph.coarsen');
 
 function createLayout(graph) {
-  var layers;
+  var topLayerGraph;
   var globalPos;
   var topLayout;
 
@@ -16,7 +17,6 @@ function createLayout(graph) {
     run: run
   };
 
-
   return api;
 
   function getNodePosition(nodeId) {
@@ -24,32 +24,35 @@ function createLayout(graph) {
   }
 
   function run() {
+    if (graph.getNodesCount() === 0) {
+      // no nodes - no layout.
+      return;
+    }
+
     log('Running clustering algorithm on graph. This may take a while...');
 
     var srcGraph = graph;
-    var clusters = detectClusters(srcGraph);
-    layers = [{
-        graph: srcGraph,
-        clusters: clusters
-      }];
+    var done = false;
+    var currentLayer = 0;
 
-    while(clusters.canCoarse()) {
-      log('Layer ' + layers.length + ' completed. Trying next level...');
-
+    while(!done) {
+      var clusters = detectClusters(srcGraph);
       var communityGraph = coarsen(srcGraph, clusters);
+
+      // If there is no way we can produce next level community graph - we are done.
+      done = !clusters.canCoarse();
+
+      log('Found: ' + communityGraph.getNodesCount() + ' communities at layer ' + currentLayer);
+      log('Performing layout of each community node');
 
       communityGraph.forEachNode(function(node) {
         node.data.layout = layoutCommunity(srcGraph, node);
       });
 
-      layers.push({
-        graph: communityGraph,
-        clusters: clusters
-      });
-
-      clusters = detectClusters(communityGraph);
       srcGraph = communityGraph;
     }
+
+    topLayerGraph = srcGraph;
 
     log('Reached maximum clustering level. Performing bottom to top layout');
     initPositions();
@@ -57,16 +60,16 @@ function createLayout(graph) {
 
   function initPositions() {
     globalPos = Object.create(null)
-    var topLayer = layers[layers.length - 1];
 
     var nodeSet = new Set();
-    topLayer.graph.forEachNode(function(node) { nodeSet.add(node.id); });
-
-    topLayout = layoutCommunity(topLayer.graph, {
-      data: nodeSet
+    topLayerGraph.forEachNode(function(node) {
+      nodeSet.add(node.id);
     });
 
+    topLayout = layoutCommunity(topLayerGraph, { data: nodeSet });
+
     var size = topLayout.size;
+    debugger;
     renderLayer(topLayout.dgraph.nodes, -size.x, -size.y);
 
     function renderLayer(nodes, x, y) {
@@ -84,8 +87,16 @@ function createLayout(graph) {
   }
 
   function layoutCommunity(srcGraph, communityNode) {
-    var internalGraph = buildInternalGraph(srcGraph, communityNode.data); 
-    var size = internalLayout(internalGraph)
+    var internalGraph = buildInternalGraph(srcGraph, communityNode.data);
+    var size;
+    if (internalGraph.edges.length === 0) {
+      var isolateNodes = internalGraph.nodes;
+      log('Performing layout of isolate nodes. Found ' + isolateNodes.length + ' nodes');
+      size = layoutIsolateNodes(isolateNodes);
+      log('Done');
+    } else {
+      size = internalLayout(internalGraph);
+    }
 
     return {
       size: size,
@@ -107,6 +118,11 @@ function buildInternalGraph(srcGraph, nodesSet) {
 
   nodesSet.forEach(addNode);
   nodesSet.forEach(addInternalEdges);
+
+  return {
+    nodes: nodes,
+    edges: edges
+  };
 
   function addNode(srcNodeId) {
     var srcNode = srcGraph.getNode(srcNodeId)
@@ -134,7 +150,8 @@ function buildInternalGraph(srcGraph, nodesSet) {
     srcGraph.forEachLinkedNode(srcNodeId, appendLinkIfInternal, true);
 
     function appendLinkIfInternal(otherNode, link) {
-      if (!nodesSet.has(otherNode.id)) return; // this edge goes outtside. Ignore it.
+      if (!nodesSet.has(otherNode.id)) return; // this edge goes outside. Ignore it.
+
       var link = {
         source: idToNode[srcNodeId],
         target: idToNode[otherNode.id]
@@ -143,9 +160,4 @@ function buildInternalGraph(srcGraph, nodesSet) {
       edges.push(link);
     }
   }
-
-  return {
-    nodes: nodes,
-    edges: edges
-  };
 }
