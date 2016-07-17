@@ -31,30 +31,28 @@ function createLayout(graph) {
 
     log('Running clustering algorithm on graph. This may take a while...');
 
-    var srcGraph = graph;
-    var done = false;
+    topLayerGraph = graph;
     var currentLayer = 0;
 
-    while(!done) {
-      var clusters = detectClusters(srcGraph);
-      var communityGraph = coarsen(srcGraph, clusters);
-
-      // If there is no way we can produce next level community graph - we are done.
-      done = !clusters.canCoarse();
+    do {
+      var clusters = detectClusters(topLayerGraph);
+      var communityGraph = coarsen(topLayerGraph, clusters);
 
       log('Found: ' + communityGraph.getNodesCount() + ' communities at layer ' + currentLayer);
       log('Performing layout of each community node');
 
       communityGraph.forEachNode(function(node) {
-        node.data.layout = layoutCommunity(srcGraph, node);
+        node.data.layout = layoutCommunity(topLayerGraph, node);
       });
 
-      srcGraph = communityGraph;
-    }
+      topLayerGraph = communityGraph;
 
-    topLayerGraph = srcGraph;
+      currentLayer += 1;
+      // If there is no way we can produce next level community graph - we are done.
+    } while (clusters.canCoarse());
 
     log('Reached maximum clustering level. Performing bottom to top layout');
+
     initPositions();
   }
 
@@ -69,7 +67,7 @@ function createLayout(graph) {
     topLayout = layoutCommunity(topLayerGraph, { data: nodeSet });
 
     var size = topLayout.size;
-    debugger;
+
     renderLayer(topLayout.dgraph.nodes, -size.x, -size.y);
 
     function renderLayer(nodes, x, y) {
