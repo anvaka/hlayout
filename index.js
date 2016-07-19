@@ -10,6 +10,8 @@ function createLayout(graph) {
   var topLayerGraph;
   var globalPos;
   var topLayout;
+  // what's the radius of a single node?
+  var individualRadius = 30;
 
   var api = {
     getNodePosition: getNodePosition,
@@ -85,12 +87,12 @@ function createLayout(graph) {
   }
 
   function layoutCommunity(srcGraph, communityNode) {
-    var internalGraph = buildInternalGraph(srcGraph, communityNode.data);
+    var internalGraph = buildInternalGraph(srcGraph, communityNode.data, individualRadius);
     var size;
     if (internalGraph.edges.length === 0) {
       var isolateNodes = internalGraph.nodes;
       log('Performing layout of isolate nodes. Found ' + isolateNodes.length + ' nodes');
-      size = layoutIsolateNodes(isolateNodes);
+      size = layoutIsolateNodes(isolateNodes, individualRadius);
       log('Done');
     } else {
       size = internalLayout(internalGraph);
@@ -109,7 +111,7 @@ function createLayout(graph) {
  * that contains only nodes from given set. Connections between nodes in this
  * set are the same as in the original graph.
  */
-function buildInternalGraph(srcGraph, nodesSet) {
+function buildInternalGraph(srcGraph, nodesSet, individualRadius) {
   var nodes = [];
   var edges = [];
   var idToNode = Object.create(null);
@@ -132,7 +134,7 @@ function buildInternalGraph(srcGraph, nodesSet) {
     var node = {
       id: srcNodeId,
       index: nodeIndex,
-      r: size ? size.r : 5
+      r: size ? size.r : individualRadius
     };
 
     if (layout && layout.dgraph) {
