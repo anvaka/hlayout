@@ -22,17 +22,17 @@ function createLayout(graph) {
   return api;
 
   function getHierarchy() {
-    var result = {};
-
     var size = topLayout.size;
-    var current = result;
-    current.x = -size.x;
-    current.y = -size.y;
-    current.r = size.r;
+    var root = {
+      x: -size.x,
+      y: -size.y,
+      r: size.r
+    }
 
-    appendChildren(current, topLayout.dgraph.nodes);
+    appendChildren(root, topLayout.dgraph.nodes);
+    flatten(root);
 
-    return result;
+    return root;
 
     function appendChildren(parent, nodes) {
       if (!nodes) return;
@@ -51,6 +51,19 @@ function createLayout(graph) {
         // traverse down
         appendChildren(child, node.dgraph.nodes);
       });
+    }
+
+    function flatten(root) {
+      if (!root.children) return;
+
+      if (root.children.length === 1) {
+        root.children = root.children[0].children;
+        flatten(root);
+      } else {
+        root.children.forEach(function(child) {
+          flatten(child);
+        });
+      }
     }
   }
 
