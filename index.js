@@ -15,11 +15,44 @@ function createLayout(graph) {
 
   var api = {
     getNodePosition: getNodePosition,
-    getTopLayout: function() { return topLayout; },
+    getHierarchy: getHierarchy,
     run: run
   };
 
   return api;
+
+  function getHierarchy() {
+    var result = {};
+
+    var size = topLayout.size;
+    var current = result;
+    current.x = -size.x;
+    current.y = -size.y;
+    current.r = size.r;
+
+    appendChildren(current, topLayout.dgraph.nodes);
+
+    return result;
+
+    function appendChildren(parent, nodes) {
+      if (!nodes) return;
+
+      nodes.forEach(function(node) {
+        if (!node.dgraph) return; // this is a leaf
+
+        var child = {
+          x: parent.x + node.x,
+          y: parent.y + node.y,
+          r: node.r
+        };
+
+        if (!parent.children) parent.children = [child];
+        else parent.children.push(child);
+        // traverse down
+        appendChildren(child, node.dgraph.nodes);
+      });
+    }
+  }
 
   function getNodePosition(nodeId) {
     return globalPos[nodeId];
