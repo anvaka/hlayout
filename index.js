@@ -20,6 +20,7 @@ function createLayout(graph) {
     getNodePosition: getNodePosition,
     getHierarchy: getHierarchy,
     getDepth: getDepth,
+    getGroupsAtLevel: getGroupsAtLevel,
     run: run
   };
 
@@ -27,6 +28,27 @@ function createLayout(graph) {
 
   function getDepth() {
     return depth;
+  }
+
+  function getGroupsAtLevel(level) {
+    var groups = Object.create(null);
+
+    renderLayer(topLayout.dgraph.nodes, 0);
+
+    return groups;
+
+    function renderLayer(nodes, currentLevel, cluster) {
+      nodes.forEach(function(node, idx) {
+        if (currentLevel === level) {
+          cluster = idx;
+        }
+        if (node.dgraph) {
+          renderLayer(node.dgraph.nodes, currentLevel + 1, cluster);
+        } else {
+          groups[node.id] = cluster
+        }
+      });
+    }
   }
 
   function getHierarchy() {
