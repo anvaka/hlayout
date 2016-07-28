@@ -13,13 +13,21 @@ function createLayout(graph) {
   // what's the radius of a single node?
   var individualRadius = 30;
 
+  // How many layers we found
+  var depth = 0;
+
   var api = {
     getNodePosition: getNodePosition,
     getHierarchy: getHierarchy,
+    getDepth: getDepth,
     run: run
   };
 
   return api;
+
+  function getDepth() {
+    return depth;
+  }
 
   function getHierarchy() {
     var size = topLayout.size;
@@ -98,6 +106,8 @@ function createLayout(graph) {
       currentLayer += 1;
       // If there is no way we can produce next level community graph - we are done.
     } while (clusters.canCoarse());
+
+    depth = currentLayer - 1;
 
     log('Reached maximum clustering level. Performing bottom to top layout');
 
