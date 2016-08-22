@@ -3,10 +3,12 @@ module.exports = createLayout;
 var internalLayout = require('./lib/internalLayout.js');
 var layoutIsolateNodes = require('./lib/layoutIsolateNodes.js');
 var log = require('./lib/log.js');
-var detectClusters = require('ngraph.louvain');
+var defaultClusterDetection = require('ngraph.louvain');
 var coarsen = require('ngraph.coarsen');
 
-function createLayout(graph) {
+function createLayout(graph, detectClusters) {
+  detectClusters = detectClusters || defaultClusterDetection;
+
   var topLayerGraph;
   var globalPos;
   var topLayout;
