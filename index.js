@@ -198,11 +198,23 @@ function buildInternalGraph(srcGraph, nodesSet, individualRadius) {
 
   nodesSet.forEach(addNode);
   nodesSet.forEach(addInternalEdges);
+  normalizeStrengths();
 
   return {
     nodes: nodes,
     edges: edges
   };
+
+  function normalizeStrengths() {
+    var maxStrength = 1;
+    edges.forEach(function(edge) {
+      if (edge.weight > maxStrength) maxStrength = edge.weight;
+    });
+
+    edges.forEach(function(edge) {
+      edge.weight /= maxStrength;
+    })
+  }
 
   function addNode(srcNodeId) {
     var srcNode = srcGraph.getNode(srcNodeId)
@@ -229,12 +241,13 @@ function buildInternalGraph(srcGraph, nodesSet, individualRadius) {
   function addInternalEdges(srcNodeId) {
     srcGraph.forEachLinkedNode(srcNodeId, appendLinkIfInternal, true);
 
-    function appendLinkIfInternal(otherNode, link) {
+    function appendLinkIfInternal(otherNode, nlink) {
       if (!nodesSet.has(otherNode.id)) return; // this edge goes outside. Ignore it.
 
       var link = {
         source: idToNode[srcNodeId],
-        target: idToNode[otherNode.id]
+        target: idToNode[otherNode.id],
+        weight: nlink.data || 1
       }
 
       edges.push(link);
